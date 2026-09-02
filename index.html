@@ -1,0 +1,2001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CYBERVERSE — Cybersecurity Command Center</title>
+<style>
+  :root {
+    --bg: #0a0d14;
+    --bg2: #0f1420;
+    --bg3: #141928;
+    --panel: #1a2035;
+    --panel2: #1f2740;
+    --border: rgba(99,179,237,0.12);
+    --border2: rgba(99,179,237,0.22);
+    --accent: #3b82f6;
+    --accent2: #60a5fa;
+    --accent3: #93c5fd;
+    --green: #10b981;
+    --green2: #34d399;
+    --red: #ef4444;
+    --red2: #f87171;
+    --orange: #f59e0b;
+    --orange2: #fbbf24;
+    --purple: #8b5cf6;
+    --cyan: #06b6d4;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --glass: rgba(26,32,53,0.7);
+    --glow: 0 0 20px rgba(59,130,246,0.15);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--panel2); border-radius: 2px; }
+
+  /* ========== LANDING PAGE ========== */
+  #landing {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.08) 0%, transparent 70%),
+                radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.06) 0%, transparent 60%),
+                var(--bg);
+  }
+  #network-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .landing-content {
+    text-align: center;
+    z-index: 2;
+    padding: 2rem;
+  }
+  .cv-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.3);
+    border-radius: 50px;
+    padding: 6px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+  }
+  .cv-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: blink 2s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .hero-title {
+    font-size: clamp(3rem, 8vw, 7rem);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 0.95;
+    background: linear-gradient(135deg, #fff 0%, #93c5fd 40%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1.5rem;
+  }
+  .hero-sub {
+    font-size: 1.1rem;
+    color: var(--text2);
+    max-width: 520px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.7;
+  }
+  .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    color: #fff;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 0.3px;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(59,130,246,0.35); }
+  .btn-secondary {
+    background: rgba(255,255,255,0.05);
+    color: var(--text2);
+    border: 1px solid var(--border2);
+    padding: 14px 32px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+  .hero-stats {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    margin-top: 3rem;
+    flex-wrap: wrap;
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat-val { font-size: 1.8rem; font-weight: 700; color: var(--accent2); }
+  .hero-stat-lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ========== APP SHELL ========== */
+  #app { display: none; height: 100vh; flex-direction: row; }
+  #app.visible { display: flex; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .sidebar-logo {
+    padding: 20px 18px 16px;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #fff;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .sidebar-section { padding: 16px 12px 8px; }
+  .sidebar-section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text3);
+    padding: 0 6px;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover { background: var(--panel); color: var(--text); }
+  .nav-item.active {
+    background: rgba(59,130,246,0.12);
+    color: var(--accent2);
+    border-color: rgba(59,130,246,0.2);
+  }
+  .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--red);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 50px;
+    min-width: 18px;
+    text-align: center;
+  }
+  .sidebar-env-card {
+    margin: 12px;
+    padding: 12px;
+    background: var(--panel);
+    border-radius: 10px;
+    border: 1px solid var(--border2);
+  }
+  .env-status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    display: inline-block;
+    animation: blink 2s infinite;
+  }
+  .env-name { font-size: 12px; font-weight: 600; margin: 6px 0 2px; }
+  .env-meta { font-size: 10px; color: var(--text3); }
+
+  /* MAIN CONTENT */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar {
+    height: 56px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .topbar-title { font-size: 15px; font-weight: 600; }
+  .topbar-env-badge {
+    padding: 4px 10px;
+    background: rgba(16,185,129,0.1);
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 50px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--green2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .topbar-btn {
+    padding: 6px 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 12px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .topbar-btn:hover { background: var(--panel); color: var(--text); }
+  .topbar-btn.danger { border-color: rgba(239,68,68,0.3); color: var(--red2); }
+  .page-content { flex: 1; overflow-y: auto; padding: 20px; }
+
+  /* ========== GRID & CARDS ========== */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .stat-card:hover { border-color: var(--border2); }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--purple));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .stat-card:hover::before { opacity: 1; }
+  .stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px; }
+  .stat-value { font-size: 2rem; font-weight: 700; line-height: 1; }
+  .stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .stat-critical { color: var(--red2); }
+  .stat-high { color: var(--orange2); }
+  .stat-medium { color: #fbbf24; }
+  .stat-good { color: var(--green2); }
+  .stat-info { color: var(--accent2); }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .card-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-title { font-size: 13px; font-weight: 600; flex: 1; }
+  .card-action {
+    font-size: 11px; color: var(--accent2); cursor: pointer;
+    padding: 4px 10px;
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .card-action:hover { background: rgba(59,130,246,0.1); }
+
+  /* ========== SEVERITY BADGES ========== */
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px;
+    border-radius: 50px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .badge-critical { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .badge-high { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+  .badge-medium { background: rgba(251,191,36,0.12); color: #fde68a; border: 1px solid rgba(251,191,36,0.25); }
+  .badge-low { background: rgba(16,185,129,0.12); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.25); }
+  .badge-info { background: rgba(59,130,246,0.12); color: #93c5fd; border: 1px solid rgba(59,130,246,0.25); }
+  .badge-online { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+  .badge-demo { background: rgba(139,92,246,0.12); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.25); }
+
+  /* ========== TABLES ========== */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .data-table th {
+    text-align: left;
+    padding: 8px 12px;
+    color: var(--text3);
+    font-weight: 600;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .data-table tr { cursor: pointer; transition: background 0.15s; }
+  .port-num { font-family: 'Courier New', monospace; font-size: 12px; color: var(--cyan); }
+  .service-name { font-weight: 600; }
+  .state-open { color: var(--green2); font-weight: 600; }
+  .state-closed { color: var(--text3); }
+  .state-filtered { color: var(--orange2); }
+
+  /* ========== NETWORK VIZ ========== */
+  #twin-canvas { width: 100%; height: 340px; border-radius: 12px; background: var(--bg3); border: 1px solid var(--border); }
+
+  /* ========== FORMS ========== */
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.8px; }
+  .form-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+  .form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .auth-confirm {
+    background: rgba(239,68,68,0.06);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 16px;
+  }
+  .auth-confirm label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 12.5px; color: var(--text2); line-height: 1.5; }
+  .auth-confirm input[type=checkbox] { margin-top: 2px; accent-color: var(--accent); }
+  .btn-add {
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    color: #fff; border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+    width: 100%;
+  }
+  .btn-add:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-add:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ========== MODAL ========== */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 24px;
+    width: 520px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .modal-sub { font-size: 12px; color: var(--text3); margin-bottom: 20px; }
+  .modal-close {
+    position: absolute; top: 16px; right: 16px;
+    background: none; border: none;
+    color: var(--text3); font-size: 18px; cursor: pointer;
+    width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+  }
+  .modal-close:hover { background: var(--panel); color: var(--text); }
+
+  /* ========== RISK METER ========== */
+  .risk-bar-wrap { margin: 8px 0; }
+  .risk-bar-track { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+  .risk-bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+  .risk-critical .risk-bar-fill { background: linear-gradient(90deg, var(--red), #dc2626); }
+  .risk-high .risk-bar-fill { background: linear-gradient(90deg, var(--orange), #d97706); }
+  .risk-medium .risk-bar-fill { background: linear-gradient(90deg, var(--orange2), #d97706); }
+  .risk-low .risk-bar-fill { background: linear-gradient(90deg, var(--green), var(--green2)); }
+
+  /* ========== FINDING DETAIL ========== */
+  .finding-item {
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg3);
+  }
+  .finding-item:hover { border-color: var(--border2); background: var(--panel); }
+  .finding-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .finding-meta { font-size: 11px; color: var(--text3); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+  /* ========== CONSOLE ========== */
+  .console {
+    background: #050810;
+    border: 1px solid rgba(59,130,246,0.15);
+    border-radius: 10px;
+    padding: 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 11.5px;
+    height: 160px;
+    overflow-y: auto;
+    line-height: 1.8;
+  }
+  .log-info { color: #60a5fa; }
+  .log-success { color: #34d399; }
+  .log-warn { color: #fbbf24; }
+  .log-error { color: #f87171; }
+  .log-time { color: #475569; margin-right: 8px; }
+
+  /* ========== ATTACK SURFACE ========== */
+  .attack-surface-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .attack-node {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .attack-node:hover { border-color: var(--border2); background: var(--panel); transform: translateY(-2px); }
+  .attack-node-icon { font-size: 22px; margin-bottom: 8px; }
+  .attack-node-name { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .attack-node-risk { font-size: 10px; }
+
+  /* ========== TIME MACHINE ========== */
+  .timeline-wrap { display: flex; gap: 0; overflow-x: auto; padding-bottom: 8px; }
+  .timeline-item {
+    min-width: 100px;
+    text-align: center;
+    position: relative;
+    padding: 0 8px;
+    cursor: pointer;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    top: 20px; left: 0; right: 0;
+    height: 2px;
+    background: var(--border2);
+  }
+  .timeline-item:first-child::before { left: 50%; }
+  .timeline-item:last-child::before { right: 50%; }
+  .timeline-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin: 14px auto 10px;
+    position: relative;
+    z-index: 1;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 8px var(--accent);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .timeline-dot:hover, .timeline-item.active .timeline-dot { background: var(--purple); box-shadow: 0 0 12px var(--purple); }
+  .timeline-scan-id { font-size: 10px; color: var(--text3); font-family: monospace; }
+  .timeline-risk-val { font-size: 18px; font-weight: 700; }
+  .timeline-risk-lbl { font-size: 10px; color: var(--text3); }
+
+  /* ========== SIMULATION ========== */
+  .sim-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+  }
+  .sim-card:hover { border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.05); }
+  .sim-title { font-size: 13px; font-weight: 600; }
+  .sim-desc { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .sim-result {
+    background: rgba(16,185,129,0.05);
+    border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 12px;
+  }
+
+  /* ========== REPORT ========== */
+  .report-section { margin-bottom: 20px; }
+  .report-section h3 { font-size: 13px; font-weight: 700; color: var(--accent2); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .report-section p, .report-section li { font-size: 12.5px; color: var(--text2); line-height: 1.7; }
+  .report-section ul { padding-left: 18px; }
+  .report-disclaimer {
+    background: rgba(245,158,11,0.07);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 11.5px;
+    color: var(--orange2);
+    margin-bottom: 16px;
+  }
+
+  /* ========== EMPTY STATE ========== */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text3);
+  }
+  .empty-state-icon { font-size: 40px; margin-bottom: 14px; opacity: 0.5; }
+  .empty-state h3 { font-size: 15px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
+  .empty-state p { font-size: 13px; }
+
+  /* ========== RESPONSIVE ========== */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .form-row { grid-template-columns: 1fr; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ========== PAGE TRANSITIONS ========== */
+  .page { display: none; animation: fadeIn 0.25s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ========== SCAN IMPORT ========== */
+  .drop-zone {
+    border: 2px dashed var(--border2);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+  }
+  .drop-zone:hover { border-color: var(--accent); background: rgba(59,130,246,0.04); }
+  .drop-zone-icon { font-size: 32px; margin-bottom: 10px; opacity: 0.5; }
+  .drop-zone p { font-size: 13px; color: var(--text2); }
+  .drop-zone small { font-size: 11px; color: var(--text3); }
+
+  /* TAG CHIP */
+  .tag { display: inline-flex; align-items: center; padding: 2px 8px; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); border-radius: 4px; font-size: 10px; color: var(--accent2); font-weight: 600; font-family: monospace; }
+</style>
+</head>
+<body>
+
+<!-- ===== LANDING PAGE ===== -->
+<div id="landing">
+  <canvas id="network-canvas"></canvas>
+  <div class="landing-content">
+    <div class="cv-badge">Authorized Security Assessment Platform</div>
+    <h1 class="hero-title">CYBERVERSE</h1>
+    <p class="hero-sub">An interactive cybersecurity command center for authorized security laboratories and digital environments.</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="enterApp()">⚡ Enter Cyberverse</button>
+      <button class="btn-secondary" onclick="loadDemo()">🔬 Explore Demo</button>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-val">360°</div>
+        <div class="hero-stat-lbl">Visibility</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">Real-time</div>
+        <div class="hero-stat-lbl">Risk Engine</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">Auth-First</div>
+        <div class="hero-stat-lbl">By Design</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP SHELL ===== -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">⬡</div>
+      CYBERVERSE
+    </div>
+
+    <div class="sidebar-env-card" id="env-card">
+      <span class="env-status-dot"></span>
+      <div class="env-name" id="env-name-display">No Environment</div>
+      <div class="env-meta" id="env-meta-display">Add targets to begin</div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Command Center</div>
+      <div class="nav-item active" onclick="navigate('dashboard', this)"><span class="nav-icon">⬡</span> Dashboard</div>
+      <div class="nav-item" onclick="navigate('twin', this)"><span class="nav-icon">🌐</span> Digital Twin</div>
+      <div class="nav-item" onclick="navigate('attack', this)"><span class="nav-icon">🎯</span> Attack Surface</div>
+      <div class="nav-item" onclick="navigate('risk', this)"><span class="nav-icon">📊</span> Risk Center</div>
+      <div class="nav-item" onclick="navigate('timemachine', this)"><span class="nav-icon">⏱</span> Time Machine</div>
+      <div class="nav-item" onclick="navigate('simulation', this)"><span class="nav-icon">🧪</span> Simulation</div>
+      <div class="nav-item" onclick="navigate('reports', this)"><span class="nav-icon">📄</span> Reports</div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Intelligence</div>
+      <div class="nav-item" onclick="navigate('targets', this)"><span class="nav-icon">🖥</span> Targets</div>
+      <div class="nav-item" onclick="navigate('network', this)"><span class="nav-icon">🔗</span> Network</div>
+      <div class="nav-item" onclick="navigate('services', this)"><span class="nav-icon">🔌</span> Services</div>
+      <div class="nav-item" onclick="navigate('findings', this)">
+        <span class="nav-icon">🔍</span> Findings
+        <span class="nav-badge" id="findings-badge">0</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Lab</div>
+      <div class="nav-item" onclick="navigate('environments', this)"><span class="nav-icon">🏗</span> Environments</div>
+      <div class="nav-item" onclick="navigate('scanjobs', this)"><span class="nav-icon">⚙</span> Scan Jobs</div>
+      <div class="nav-item" onclick="navigate('import', this)"><span class="nav-icon">📥</span> Import Results</div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">System</div>
+      <div class="nav-item" onclick="navigate('audit', this)"><span class="nav-icon">📋</span> Audit Log</div>
+      <div class="nav-item" onclick="navigate('settings', this)"><span class="nav-icon">⚙</span> Settings</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Command Center</div>
+      <div class="topbar-env-badge" id="topbar-env-badge">DEMO ENV</div>
+      <div class="topbar-right">
+        <button class="topbar-btn" onclick="openModal('add-target-modal')">+ Add Target</button>
+        <button class="topbar-btn danger" onclick="openModal('import-modal')">⬆ Import Scan</button>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- ===== DASHBOARD PAGE ===== -->
+      <div class="page active" id="page-dashboard">
+        <div id="demo-banner" style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.25);border-radius:10px;padding:10px 16px;margin-bottom:16px;font-size:12px;color:#c4b5fd;display:flex;align-items:center;gap:10px;">
+          <span>🔬</span>
+          <span><strong>DEMO ENVIRONMENT</strong> — All data is synthetic. No real systems are connected. Replace with your authorized lab targets.</span>
+          <button onclick="this.parentElement.style.display='none'" style="margin-left:auto;background:none;border:none;color:#7c3aed;cursor:pointer;font-size:16px;">×</button>
+        </div>
+
+        <div class="stat-grid" id="stat-grid">
+          <div class="stat-card"><div class="stat-label">Security Score</div><div class="stat-value stat-high" id="stat-score">41</div><div class="stat-sub">/ 100 — HIGH RISK</div></div>
+          <div class="stat-card"><div class="stat-label">Targets</div><div class="stat-value stat-info" id="stat-targets">5</div><div class="stat-sub">Authorized</div></div>
+          <div class="stat-card"><div class="stat-label">Services</div><div class="stat-value stat-info" id="stat-services">28</div><div class="stat-sub">Discovered</div></div>
+          <div class="stat-card"><div class="stat-label">Findings</div><div class="stat-value stat-high" id="stat-findings">14</div><div class="stat-sub">Active</div></div>
+          <div class="stat-card"><div class="stat-label">Critical</div><div class="stat-value stat-critical" id="stat-critical">3</div><div class="stat-sub">Findings</div></div>
+          <div class="stat-card"><div class="stat-label">Env Risk</div><div class="stat-value stat-high" id="stat-risk">HIGH</div><div class="stat-sub">Model estimate</div></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div class="card">
+            <div class="card-header">
+              <span>🔍</span>
+              <div class="card-title">Critical Findings</div>
+              <span class="card-action" onclick="navigate('findings',null)">View all</span>
+            </div>
+            <div id="dashboard-findings"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span>🎯</span>
+              <div class="card-title">Top Risk Targets</div>
+            </div>
+            <div id="dashboard-targets"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span>💻</span>
+            <div class="card-title">Assessment Console</div>
+            <span id="console-status" style="font-size:10px;color:var(--green2);">● READY</span>
+          </div>
+          <div class="console" id="console-log"></div>
+        </div>
+      </div>
+
+      <!-- ===== DIGITAL TWIN ===== -->
+      <div class="page" id="page-twin">
+        <div class="card">
+          <div class="card-header">
+            <span>🌐</span>
+            <div class="card-title">Digital Twin — Network Topology</div>
+            <span style="font-size:10px;color:var(--text3);">Generated from lab data</span>
+          </div>
+          <canvas id="twin-canvas"></canvas>
+          <div style="margin-top:12px;font-size:11px;color:var(--text3);text-align:center;">
+            Click nodes to view target details · Scroll to zoom · Drag to pan
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span>📌</span><div class="card-title">Selected Node Info</div></div>
+          <div id="twin-detail">
+            <div class="empty-state" style="padding:24px">
+              <p style="font-size:13px;color:var(--text3);">Click a node in the Digital Twin to view details.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TARGETS ===== -->
+      <div class="page" id="page-targets">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <span>🖥</span>
+            <div class="card-title">Target Inventory</div>
+            <button class="card-action" onclick="openModal('add-target-modal')">+ Add Target</button>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>IP / Host</th><th>OS</th><th>Type</th><th>Authorization</th><th>Risk</th><th>Status</th></tr></thead>
+            <tbody id="targets-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== NETWORK ===== -->
+      <div class="page" id="page-network">
+        <div class="card">
+          <div class="card-header"><span>🔗</span><div class="card-title">Network Discovery</div></div>
+          <table class="data-table">
+            <thead><tr><th>Host</th><th>IP Address</th><th>Hostname</th><th>OS</th><th>Open Ports</th><th>Status</th></tr></thead>
+            <tbody id="network-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== SERVICES ===== -->
+      <div class="page" id="page-services">
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <button class="topbar-btn" onclick="filterServices('all')" id="filter-all" style="border-color:var(--accent);color:var(--accent2)">All</button>
+          <button class="topbar-btn" onclick="filterServices('open')">Open</button>
+          <button class="topbar-btn" onclick="filterServices('web')">Web</button>
+          <button class="topbar-btn" onclick="filterServices('remote')">Remote Access</button>
+          <button class="topbar-btn" onclick="filterServices('file')">File Sharing</button>
+          <button class="topbar-btn" onclick="filterServices('high')">High Risk</button>
+        </div>
+        <div class="card">
+          <div class="card-header"><span>🔌</span><div class="card-title">Service Intelligence Map</div></div>
+          <table class="data-table">
+            <thead><tr><th>Port</th><th>Protocol</th><th>Service</th><th>Product / Version</th><th>Target</th><th>State</th><th>Risk</th></tr></thead>
+            <tbody id="services-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== FINDINGS ===== -->
+      <div class="page" id="page-findings">
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <button class="topbar-btn" onclick="filterFindings('all')" style="border-color:var(--accent);color:var(--accent2)">All</button>
+          <button class="topbar-btn" onclick="filterFindings('CRITICAL')">Critical</button>
+          <button class="topbar-btn" onclick="filterFindings('HIGH')">High</button>
+          <button class="topbar-btn" onclick="filterFindings('MEDIUM')">Medium</button>
+          <button class="topbar-btn" onclick="filterFindings('LOW')">Low</button>
+        </div>
+        <div id="findings-list"></div>
+      </div>
+
+      <!-- ===== ATTACK SURFACE ===== -->
+      <div class="page" id="page-attack">
+        <div class="card">
+          <div class="card-header"><span>🎯</span><div class="card-title">Attack Surface Analysis</div></div>
+          <div class="attack-surface-grid" id="attack-grid"></div>
+        </div>
+        <div class="card" id="attack-detail-card" style="display:none">
+          <div class="card-header"><span>🔍</span><div class="card-title">Service Exposure Detail</div></div>
+          <div id="attack-detail"></div>
+        </div>
+      </div>
+
+      <!-- ===== RISK CENTER ===== -->
+      <div class="page" id="page-risk">
+        <div class="card">
+          <div class="card-header"><span>📊</span><div class="card-title">Risk Engine</div></div>
+          <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:10px 14px;font-size:11.5px;color:var(--orange2);margin-bottom:14px;">
+            ⚠ Risk is a model-generated estimate based on asset criticality, exposure, and findings.
+          </div>
+          <div id="risk-targets"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span>📈</span><div class="card-title">Risk Distribution</div></div>
+          <canvas id="risk-chart" height="140"></canvas>
+        </div>
+      </div>
+
+      <!-- ===== TIME MACHINE ===== -->
+      <div class="page" id="page-timemachine">
+        <div class="card">
+          <div class="card-header"><span>⏱</span><div class="card-title">Cyber Time Machine — Scan History</div></div>
+          <div class="timeline-wrap" id="timeline-wrap"></div>
+        </div>
+        <div class="card" id="snapshot-detail">
+          <div class="card-header"><span>📸</span><div class="card-title">Snapshot Comparison</div></div>
+          <div id="snapshot-content"></div>
+        </div>
+      </div>
+
+      <!-- ===== SIMULATION ===== -->
+      <div class="page" id="page-simulation">
+        <div class="card">
+          <div class="card-header"><span>🧪</span><div class="card-title">What-If Security Simulator</div><span style="font-size:11px;color:var(--text3);">Simulation never modifies real targets</span></div>
+          <div id="sim-list"></div>
+        </div>
+        <div class="card" id="sim-result-card" style="display:none">
+          <div class="card-header"><span>📊</span><div class="card-title">Simulation Result</div></div>
+          <div id="sim-result"></div>
+        </div>
+      </div>
+
+      <!-- ===== REPORTS ===== -->
+      <div class="page" id="page-reports">
+        <div class="card">
+          <div class="card-header">
+            <span>📄</span>
+            <div class="card-title">Cyberverse Authorized Security Assessment Report</div>
+            <button class="card-action" onclick="generateReport()">Generate</button>
+          </div>
+          <div id="report-content"></div>
+        </div>
+      </div>
+
+      <!-- ===== ENVIRONMENTS ===== -->
+      <div class="page" id="page-environments">
+        <div class="card">
+          <div class="card-header">
+            <span>🏗</span>
+            <div class="card-title">Lab Environments</div>
+            <button class="card-action" onclick="openModal('add-env-modal')">+ New Environment</button>
+          </div>
+          <div id="env-list"></div>
+        </div>
+      </div>
+
+      <!-- ===== SCAN JOBS ===== -->
+      <div class="page" id="page-scanjobs">
+        <div class="card">
+          <div class="card-header"><span>⚙</span><div class="card-title">Scan Jobs</div></div>
+          <table class="data-table">
+            <thead><tr><th>Job ID</th><th>Target</th><th>Scanner</th><th>Status</th><th>Started</th><th>Action</th></tr></thead>
+            <tbody id="scanjobs-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== IMPORT ===== -->
+      <div class="page" id="page-import">
+        <div class="card">
+          <div class="card-header"><span>📥</span><div class="card-title">Import Scan Results</div></div>
+          <div class="drop-zone" onclick="document.getElementById('file-upload').click()">
+            <div class="drop-zone-icon">📁</div>
+            <p>Drop Nmap XML / JSON here or click to upload</p>
+            <small>Supports: Nmap XML, Nmap JSON, Custom JSON, CSV</small>
+          </div>
+          <input type="file" id="file-upload" style="display:none" accept=".xml,.json,.csv" onchange="handleFileImport(this)">
+          <div class="form-group">
+            <label class="form-label">Or paste raw Nmap / JSON output</label>
+            <textarea class="form-input" id="import-text" rows="8" placeholder="Paste scan output here..."></textarea>
+          </div>
+          <button class="btn-add" onclick="parseImport()">Parse & Import</button>
+          <div id="import-result" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+      <!-- ===== AUDIT LOG ===== -->
+      <div class="page" id="page-audit">
+        <div class="card">
+          <div class="card-header"><span>📋</span><div class="card-title">Audit Log</div></div>
+          <table class="data-table">
+            <thead><tr><th>Timestamp</th><th>Event</th><th>User</th><th>Target</th><th>Details</th></tr></thead>
+            <tbody id="audit-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== SETTINGS ===== -->
+      <div class="page" id="page-settings">
+        <div class="card">
+          <div class="card-header"><span>⚙</span><div class="card-title">Settings</div></div>
+          <div class="form-group">
+            <label class="form-label">Default Environment Name</label>
+            <input class="form-input" id="setting-env" value="My Cyber Lab">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Assessor / Username</label>
+            <input class="form-input" id="setting-user" value="analyst@cyberverse.lab">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Risk Model Sensitivity</label>
+            <select class="form-input form-select" id="setting-risk">
+              <option>Standard</option>
+              <option>Conservative</option>
+              <option>Aggressive</option>
+            </select>
+          </div>
+          <button class="btn-add" style="max-width:180px" onclick="saveSettings()">Save Settings</button>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ===== MODALS ===== -->
+<div class="modal-overlay" id="add-target-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('add-target-modal')">×</button>
+    <div class="modal-title">Add Authorized Target</div>
+    <div class="modal-sub">Add a target within your authorized lab environment.</div>
+    <div class="form-group">
+      <label class="form-label">Target Name *</label>
+      <input class="form-input" id="t-name" placeholder="e.g. Metasploitable2">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">IP Address / Hostname *</label>
+        <input class="form-input" id="t-ip" placeholder="192.168.x.x">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Port (optional)</label>
+        <input class="form-input" id="t-port" placeholder="80, 8080...">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Target Type</label>
+        <select class="form-input form-select" id="t-type">
+          <option>LAB_VM</option>
+          <option>WEB_APPLICATION</option>
+          <option>SERVER</option>
+          <option>WORKSTATION</option>
+          <option>DATABASE</option>
+          <option>CONTAINER</option>
+          <option>NETWORK_DEVICE</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Operating System</label>
+        <select class="form-input form-select" id="t-os">
+          <option>Linux</option>
+          <option>Windows</option>
+          <option>Unknown</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Environment</label>
+        <select class="form-input form-select" id="t-env">
+          <option>LOCAL_LAB</option>
+          <option>PRIVATE_NETWORK</option>
+          <option>TRAINING_RANGE</option>
+          <option>CTF</option>
+          <option>STAGING</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Risk Level</label>
+        <select class="form-input form-select" id="t-risk">
+          <option>UNKNOWN</option>
+          <option>LOW</option>
+          <option>MEDIUM</option>
+          <option>HIGH</option>
+          <option>CRITICAL</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-input" id="t-desc" rows="2" placeholder="Brief description of this target..."></textarea>
+    </div>
+    <div class="auth-confirm">
+      <label>
+        <input type="checkbox" id="t-auth">
+        <span>I confirm that I am <strong>authorized</strong> to perform security assessment on this target. This target is within an authorized lab or test environment under my control or with written permission.</span>
+      </label>
+    </div>
+    <button class="btn-add" id="add-target-btn" onclick="addTarget()" disabled>Add Target</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="add-env-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('add-env-modal')">×</button>
+    <div class="modal-title">Create Lab Environment</div>
+    <div class="modal-sub">Group your authorized targets into a named environment.</div>
+    <div class="form-group">
+      <label class="form-label">Environment Name *</label>
+      <input class="form-input" id="env-n" placeholder="e.g. My Cyber Lab">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Environment Type</label>
+      <select class="form-input form-select" id="env-t">
+        <option>LOCAL_LAB</option>
+        <option>PRIVATE_NETWORK</option>
+        <option>TRAINING_RANGE</option>
+        <option>CTF</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-input" id="env-d" rows="2" placeholder="Lab description..."></textarea>
+    </div>
+    <button class="btn-add" onclick="addEnvironment()">Create Environment</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="finding-detail-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('finding-detail-modal')">×</button>
+    <div id="finding-detail-content"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="import-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('import-modal')">×</button>
+    <div class="modal-title">Import Scan Result</div>
+    <div class="modal-sub">Import authorized scan output from Nmap or custom tools.</div>
+    <div class="drop-zone" onclick="document.getElementById('modal-file').click()">
+      <div class="drop-zone-icon">📁</div>
+      <p>Click to upload scan file</p>
+      <small>Nmap XML, JSON, CSV</small>
+    </div>
+    <input type="file" id="modal-file" style="display:none" accept=".xml,.json,.csv" onchange="handleFileImport(this)">
+    <button class="btn-add" onclick="closeModal('import-modal');navigate('import',null)">Go to Import Page</button>
+  </div>
+</div>
+
+<script>
+// =====================
+// DATA STORE
+// =====================
+let state = {
+  currentEnv: 'Cyberverse Demo Lab',
+  isDemo: true,
+  targets: [],
+  services: [],
+  findings: [],
+  auditLog: [],
+  environments: [],
+  scanJobs: [],
+  snapshots: [],
+  simulations: []
+};
+
+// =====================
+// DEMO DATA
+// =====================
+function loadDemoData() {
+  state.isDemo = true;
+  state.currentEnv = 'Cyberverse Demo Lab';
+  state.environments = [{id:1, name:'Cyberverse Demo Lab', type:'TRAINING_RANGE', desc:'Synthetic lab for demonstration', status:'ONLINE'}];
+
+  state.targets = [
+    {id:1, name:'LAB-WEB', ip:'192.168.56.101', type:'LAB_VM', os:'Linux', env:'LOCAL_LAB', risk:'CRITICAL', status:'ONLINE', desc:'Metasploitable2 equivalent', auth:true, ports:6},
+    {id:2, name:'LAB-APP', ip:'192.168.56.102', type:'WEB_APPLICATION', os:'Linux', env:'LOCAL_LAB', risk:'HIGH', status:'ONLINE', desc:'DVWA / Juice Shop equivalent', auth:true, ports:4},
+    {id:3, name:'LAB-DB', ip:'192.168.56.103', type:'DATABASE', os:'Linux', env:'LOCAL_LAB', risk:'HIGH', status:'ONLINE', desc:'Database server', auth:true, ports:3},
+    {id:4, name:'LAB-WIN', ip:'192.168.56.104', type:'WORKSTATION', os:'Windows', env:'LOCAL_LAB', risk:'MEDIUM', status:'ONLINE', desc:'Windows workstation', auth:true, ports:5},
+    {id:5, name:'LAB-LINUX', ip:'192.168.56.105', type:'SERVER', os:'Linux', env:'LOCAL_LAB', risk:'LOW', status:'OFFLINE', desc:'Secured Linux server', auth:true, ports:2}
+  ];
+
+  state.services = [
+    {port:21, proto:'TCP', service:'FTP', product:'vsftpd', version:'2.3.4', target:'LAB-WEB', ip:'192.168.56.101', state:'open', risk:'HIGH', cat:'file'},
+    {port:22, proto:'TCP', service:'SSH', product:'OpenSSH', version:'4.7p1', target:'LAB-WEB', ip:'192.168.56.101', state:'open', risk:'MEDIUM', cat:'remote'},
+    {port:23, proto:'TCP', service:'Telnet', product:'Linux telnetd', version:'UNKNOWN', target:'LAB-WEB', ip:'192.168.56.101', state:'open', risk:'CRITICAL', cat:'remote'},
+    {port:80, proto:'TCP', service:'HTTP', product:'Apache httpd', version:'2.2.8', target:'LAB-WEB', ip:'192.168.56.101', state:'open', risk:'HIGH', cat:'web'},
+    {port:445, proto:'TCP', service:'SMB', product:'Samba', version:'3.0.20', target:'LAB-WEB', ip:'192.168.56.101', state:'open', risk:'CRITICAL', cat:'file'},
+    {port:3306, proto:'TCP', service:'MySQL', product:'MySQL', version:'5.0.51a', target:'LAB-WEB', ip:'192.168.56.101', state:'open', risk:'HIGH', cat:'db'},
+    {port:80, proto:'TCP', service:'HTTP', product:'nginx', version:'1.18.0', target:'LAB-APP', ip:'192.168.56.102', state:'open', risk:'MEDIUM', cat:'web'},
+    {port:3000, proto:'TCP', service:'HTTP', product:'Node.js', version:'UNKNOWN', target:'LAB-APP', ip:'192.168.56.102', state:'open', risk:'MEDIUM', cat:'web'},
+    {port:8080, proto:'TCP', service:'HTTP-Proxy', product:'Apache Tomcat', version:'8.5.0', target:'LAB-APP', ip:'192.168.56.102', state:'open', risk:'HIGH', cat:'web'},
+    {port:22, proto:'TCP', service:'SSH', product:'OpenSSH', version:'7.9', target:'LAB-APP', ip:'192.168.56.102', state:'open', risk:'LOW', cat:'remote'},
+    {port:3306, proto:'TCP', service:'MySQL', product:'MySQL', version:'8.0.21', target:'LAB-DB', ip:'192.168.56.103', state:'open', risk:'HIGH', cat:'db'},
+    {port:5432, proto:'TCP', service:'PostgreSQL', product:'PostgreSQL', version:'12.4', target:'LAB-DB', ip:'192.168.56.103', state:'open', risk:'MEDIUM', cat:'db'},
+    {port:27017, proto:'TCP', service:'MongoDB', product:'MongoDB', version:'4.4.1', target:'LAB-DB', ip:'192.168.56.103', state:'open', risk:'HIGH', cat:'db'},
+    {port:80, proto:'TCP', service:'HTTP', product:'IIS', version:'10.0', target:'LAB-WIN', ip:'192.168.56.104', state:'open', risk:'MEDIUM', cat:'web'},
+    {port:135, proto:'TCP', service:'MSRPC', product:'Microsoft RPC', version:'UNKNOWN', target:'LAB-WIN', ip:'192.168.56.104', state:'open', risk:'MEDIUM', cat:'remote'},
+    {port:139, proto:'TCP', service:'NetBIOS', product:'Microsoft netbios-ssn', version:'UNKNOWN', target:'LAB-WIN', ip:'192.168.56.104', state:'open', risk:'HIGH', cat:'file'},
+    {port:445, proto:'TCP', service:'SMB', product:'Microsoft DS', version:'UNKNOWN', target:'LAB-WIN', ip:'192.168.56.104', state:'open', risk:'HIGH', cat:'file'},
+    {port:3389, proto:'TCP', service:'RDP', product:'Microsoft Terminal Services', version:'UNKNOWN', target:'LAB-WIN', ip:'192.168.56.104', state:'open', risk:'HIGH', cat:'remote'},
+    {port:22, proto:'TCP', service:'SSH', product:'OpenSSH', version:'8.4', target:'LAB-LINUX', ip:'192.168.56.105', state:'open', risk:'LOW', cat:'remote'},
+    {port:443, proto:'TCP', service:'HTTPS', product:'nginx', version:'1.20.0', target:'LAB-LINUX', ip:'192.168.56.105', state:'open', risk:'LOW', cat:'web'}
+  ];
+
+  state.findings = [
+    {id:1, title:'vsftpd 2.3.4 Backdoor', severity:'CRITICAL', target:'LAB-WEB', service:'FTP/21', desc:'vsftpd version 2.3.4 contains a backdoor that allows unauthenticated remote command execution via port 6200.', impact:'Full system compromise. Attacker can execute arbitrary commands as root.', recommendation:'Replace vsftpd 2.3.4 immediately with a patched version. Block external access to FTP entirely if possible.', evidence:'Port 21 running vsftpd 2.3.4 — confirmed vulnerable version', status:'OPEN', refs:'CVE-2011-2523', firstSeen:'2024-01-10', lastSeen:'2024-01-15'},
+    {id:2, title:'Telnet Cleartext Protocol Enabled', severity:'CRITICAL', target:'LAB-WEB', service:'Telnet/23', desc:'Telnet transmits all data including credentials in cleartext. Anyone on the network can intercept login sessions.', impact:'Credential theft, session hijacking, full system access.', recommendation:'Disable Telnet. Use SSH for secure remote access.', evidence:'Port 23 open, Telnet banner received', status:'OPEN', refs:'CWE-312', firstSeen:'2024-01-10', lastSeen:'2024-01-15'},
+    {id:3, title:'Samba 3.0.20 Remote Command Execution', severity:'CRITICAL', target:'LAB-WEB', service:'SMB/445', desc:'Samba versions 3.0.0–3.0.25rc3 are vulnerable to remote command execution via username field in smb.conf "username map script".', impact:'Unauthenticated remote code execution as root.', recommendation:'Upgrade Samba to a patched version immediately.', evidence:'SMB port 445, Samba 3.0.20 banner', status:'OPEN', refs:'CVE-2007-2447', firstSeen:'2024-01-10', lastSeen:'2024-01-15'},
+    {id:4, title:'MySQL 5.0 Running Without Authentication Restriction', severity:'HIGH', target:'LAB-WEB', service:'MySQL/3306', desc:'MySQL 5.0.51a accessible on all interfaces. Older MySQL versions may accept anonymous login or have weak default credentials.', impact:'Unauthorized database access, data exfiltration.', recommendation:'Bind MySQL to localhost only. Remove anonymous users. Use strong credentials.', evidence:'Port 3306 open, MySQL 5.0.51a detected', status:'OPEN', refs:'CWE-284', firstSeen:'2024-01-11', lastSeen:'2024-01-15'},
+    {id:5, title:'Apache 2.2.8 — End of Life Version', severity:'HIGH', target:'LAB-WEB', service:'HTTP/80', desc:'Apache HTTP Server 2.2.8 is end of life and no longer receives security patches. Multiple known vulnerabilities exist.', impact:'Multiple unpatched vulnerabilities could allow DoS, information disclosure, or code execution.', recommendation:'Upgrade to Apache 2.4.x or later.', evidence:'Server: Apache/2.2.8 in HTTP response header', status:'OPEN', refs:'CVE Multiple', firstSeen:'2024-01-10', lastSeen:'2024-01-15'},
+    {id:6, title:'RDP Exposed Without Network-Level Authentication', severity:'HIGH', target:'LAB-WIN', service:'RDP/3389', desc:'Remote Desktop Protocol is exposed and may not require Network-Level Authentication (NLA), increasing brute-force and credential relay attack risk.', impact:'Brute force, credential spray, BlueKeep-type attacks if unpatched.', recommendation:'Enable NLA for RDP. Restrict RDP access to management networks only.', evidence:'Port 3389 open, RDP banner confirmed', status:'OPEN', refs:'CVE-2019-0708', firstSeen:'2024-01-12', lastSeen:'2024-01-15'},
+    {id:7, title:'MongoDB Accessible Without Authentication', severity:'HIGH', target:'LAB-DB', service:'MongoDB/27017', desc:'MongoDB listening on port 27017 without authentication enabled. Default MongoDB configuration does not require authentication.', impact:'Unauthorized access to all databases, data theft, data manipulation.', recommendation:'Enable MongoDB authentication. Bind to localhost only.', evidence:'Port 27017 open, no authentication required', status:'OPEN', refs:'CWE-306', firstSeen:'2024-01-12', lastSeen:'2024-01-15'},
+    {id:8, title:'Apache Tomcat 8.5.0 — Old Version', severity:'MEDIUM', target:'LAB-APP', service:'HTTP-Proxy/8080', desc:'Apache Tomcat 8.5.0 is outdated. Multiple vulnerabilities have been disclosed since this version was released.', impact:'Potential for DoS, information disclosure, or remote code execution depending on specific CVEs.', recommendation:'Upgrade to latest Apache Tomcat 8.5.x or 10.x.', evidence:'Server: Apache-Coyote/1.1 on port 8080', status:'OPEN', refs:'Multiple CVEs', firstSeen:'2024-01-13', lastSeen:'2024-01-15'},
+    {id:9, title:'NetBIOS Name Service Exposed', severity:'MEDIUM', target:'LAB-WIN', service:'NetBIOS/139', desc:'NetBIOS over TCP/IP exposes network naming information and can be used for network reconnaissance and NTLM relay attacks.', impact:'Information disclosure, potential for NTLM relay attacks.', recommendation:'Disable NetBIOS over TCP/IP if not required. Restrict to internal network.', evidence:'Port 139 open, NetBIOS session service', status:'OPEN', refs:'CWE-200', firstSeen:'2024-01-12', lastSeen:'2024-01-15'},
+    {id:10, title:'FTP Service Enabled', severity:'MEDIUM', target:'LAB-WEB', service:'FTP/21', desc:'FTP transmits credentials in cleartext. Even without the vsftpd backdoor, FTP itself is an insecure protocol.', impact:'Credential interception by network sniffing.', recommendation:'Replace FTP with SFTP or FTPS.', evidence:'Port 21 open with FTP banner', status:'OPEN', refs:'CWE-319', firstSeen:'2024-01-10', lastSeen:'2024-01-15'},
+    {id:11, title:'Missing Security Headers on HTTP Service', severity:'LOW', target:'LAB-APP', service:'HTTP/80', desc:'HTTP response does not include recommended security headers: X-Frame-Options, X-Content-Type-Options, Content-Security-Policy.', impact:'Increased risk of clickjacking, MIME type sniffing attacks.', recommendation:'Add security headers in web server configuration.', evidence:'HTTP headers analyzed, security headers absent', status:'OPEN', refs:'OWASP A05:2021', firstSeen:'2024-01-13', lastSeen:'2024-01-15'},
+    {id:12, title:'SSH on Older OpenSSH Version', severity:'LOW', target:'LAB-WEB', service:'SSH/22', desc:'OpenSSH 4.7p1 is an older version. While not immediately critical, update is recommended.', impact:'Potential exposure to known weaknesses in older OpenSSH versions.', recommendation:'Upgrade OpenSSH to the latest stable version.', evidence:'SSH-2.0-OpenSSH_4.7p1 Debian-8ubuntu1', status:'OPEN', refs:'UNKNOWN', firstSeen:'2024-01-10', lastSeen:'2024-01-15'},
+    {id:13, title:'HTTP Information Disclosure via Server Header', severity:'LOW', target:'LAB-WEB', service:'HTTP/80', desc:'The Apache web server discloses its version in the Server response header, aiding attackers in fingerprinting.', impact:'Information disclosure — helps attackers identify vulnerabilities.', recommendation:'Configure ServerTokens Prod in Apache configuration.', evidence:'Server: Apache/2.2.8 (Ubuntu) DAV/2 in response', status:'OPEN', refs:'CWE-200', firstSeen:'2024-01-10', lastSeen:'2024-01-15'},
+    {id:14, title:'PostgreSQL Default Port Open', severity:'INFO', target:'LAB-DB', service:'PostgreSQL/5432', desc:'PostgreSQL running on default port 5432. Verify authentication is properly configured.', impact:'Minimal — informational only. Verify access controls.', recommendation:'Ensure strong authentication and restrict access by IP.', evidence:'Port 5432 open — PostgreSQL confirmed', status:'OPEN', refs:'N/A', firstSeen:'2024-01-12', lastSeen:'2024-01-15'}
+  ];
+
+  state.auditLog = [
+    {ts:'2024-01-15 09:00:01', event:'SYSTEM_START', user:'system', target:'—', detail:'Cyberverse initialized'},
+    {ts:'2024-01-15 09:00:02', event:'DEMO_LOADED', user:'system', target:'—', detail:'Demo environment loaded'},
+    {ts:'2024-01-15 09:01:00', event:'TARGET_ADDED', user:'analyst', target:'LAB-WEB', detail:'Authorization confirmed'},
+    {ts:'2024-01-15 09:01:30', event:'TARGET_ADDED', user:'analyst', target:'LAB-APP', detail:'Authorization confirmed'},
+    {ts:'2024-01-15 09:02:00', event:'SCAN_IMPORTED', user:'analyst', target:'LAB-WEB', detail:'Nmap XML result imported'},
+    {ts:'2024-01-15 09:03:00', event:'RISK_CALCULATED', user:'system', target:'ALL', detail:'Risk engine run complete'},
+    {ts:'2024-01-15 09:04:00', event:'FINDING_ADDED', user:'system', target:'LAB-WEB', detail:'vsftpd 2.3.4 Backdoor — CRITICAL'}
+  ];
+
+  state.scanJobs = [
+    {id:'JOB-001', target:'LAB-WEB', scanner:'NMAP', status:'COMPLETED', started:'2024-01-15 09:01', completed:'2024-01-15 09:02'},
+    {id:'JOB-002', target:'LAB-APP', scanner:'WEB_SCANNER', status:'COMPLETED', started:'2024-01-15 09:03', completed:'2024-01-15 09:05'},
+    {id:'JOB-003', target:'LAB-DB', scanner:'NMAP', status:'COMPLETED', started:'2024-01-15 09:06', completed:'2024-01-15 09:07'},
+    {id:'JOB-004', target:'LAB-WIN', scanner:'NMAP', status:'COMPLETED', started:'2024-01-15 09:08', completed:'2024-01-15 09:09'},
+  ];
+
+  state.snapshots = [
+    {id:'SCAN-001', date:'Jan 10', risk:42, targets:3, services:12, findings:6, label:'Initial scan'},
+    {id:'SCAN-002', date:'Jan 11', risk:57, targets:4, services:18, findings:10, label:'Added DB target'},
+    {id:'SCAN-003', date:'Jan 12', risk:71, targets:5, services:24, findings:14, label:'Windows added'},
+    {id:'SCAN-004', date:'Jan 13', risk:68, targets:5, services:26, findings:14, label:'Telnet confirmed'},
+    {id:'SCAN-005', date:'Jan 15', risk:59, targets:5, services:28, findings:14, label:'Patched FTP'},
+  ];
+
+  state.simulations = [
+    {id:1, title:'Remove Telnet exposure', desc:'What if Telnet (port 23) is disabled on LAB-WEB?', riskBefore:71, riskAfter:55, change:-16, color:'green'},
+    {id:2, title:'Patch vsftpd backdoor', desc:'What if vsftpd 2.3.4 is upgraded to 3.0.5?', riskBefore:71, riskAfter:48, change:-23, color:'green'},
+    {id:3, title:'Enable MongoDB authentication', desc:'What if MongoDB authentication is enforced?', riskBefore:71, riskAfter:61, change:-10, color:'green'},
+    {id:4, title:'Enable RDP without patch', desc:'What if RDP is exposed to external network?', riskBefore:71, riskAfter:88, change:+17, color:'red'},
+    {id:5, title:'Enforce network segmentation', desc:'What if database servers are placed in isolated VLAN?', riskBefore:71, riskAfter:45, change:-26, color:'green'},
+  ];
+}
+
+// =====================
+// NAVIGATION
+// =====================
+function navigate(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pg = document.getElementById('page-'+page);
+  if (pg) pg.classList.add('active');
+  if (el) el.classList.add('active');
+  const titles = {dashboard:'Command Center',twin:'Digital Twin',attack:'Attack Surface',risk:'Risk Center',timemachine:'Cyber Time Machine',simulation:'What-If Simulator',reports:'Assessment Reports',targets:'Target Inventory',network:'Network Discovery',services:'Service Intelligence',findings:'Security Findings',environments:'Environments',scanjobs:'Scan Jobs',import:'Import Results',audit:'Audit Log',settings:'Settings'};
+  document.getElementById('topbar-title').textContent = titles[page] || page;
+  renderPage(page);
+}
+
+// =====================
+// RENDER PAGES
+// =====================
+function renderPage(page) {
+  switch(page) {
+    case 'dashboard': renderDashboard(); break;
+    case 'twin': renderTwin(); break;
+    case 'targets': renderTargets(); break;
+    case 'network': renderNetwork(); break;
+    case 'services': renderServices('all'); break;
+    case 'findings': renderFindings('all'); break;
+    case 'attack': renderAttack(); break;
+    case 'risk': renderRisk(); break;
+    case 'timemachine': renderTimeMachine(); break;
+    case 'simulation': renderSimulation(); break;
+    case 'reports': generateReport(); break;
+    case 'environments': renderEnvironments(); break;
+    case 'scanjobs': renderScanJobs(); break;
+    case 'audit': renderAudit(); break;
+  }
+}
+
+function renderDashboard() {
+  document.getElementById('stat-targets').textContent = state.targets.length;
+  document.getElementById('stat-services').textContent = state.services.length;
+  document.getElementById('stat-findings').textContent = state.findings.length;
+  const crit = state.findings.filter(f=>f.severity==='CRITICAL').length;
+  document.getElementById('stat-critical').textContent = crit;
+  document.getElementById('findings-badge').textContent = state.findings.length;
+
+  const critFindings = state.findings.filter(f=>f.severity==='CRITICAL'||f.severity==='HIGH').slice(0,4);
+  document.getElementById('dashboard-findings').innerHTML = critFindings.map(f=>`
+    <div class="finding-item" onclick="showFinding(${f.id})">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span class="badge badge-${f.severity.toLowerCase()}">${f.severity}</span>
+        <span class="finding-title" style="font-size:12px">${f.title}</span>
+      </div>
+      <div class="finding-meta"><span>${f.target}</span><span>${f.service}</span></div>
+    </div>`).join('');
+
+  const topTargets = [...state.targets].sort((a,b)=>riskVal(b.risk)-riskVal(a.risk)).slice(0,5);
+  document.getElementById('dashboard-targets').innerHTML = topTargets.map(t=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+      <span style="font-size:18px">${t.os==='Windows'?'🪟':'🐧'}</span>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:600">${t.name}</div>
+        <div style="font-size:10px;color:var(--text3);font-family:monospace">${t.ip}</div>
+      </div>
+      <span class="badge badge-${t.risk.toLowerCase()}">${t.risk}</span>
+    </div>`).join('');
+
+  const log = document.getElementById('console-log');
+  const entries = [
+    '[INFO] Cyberverse command center initialized',
+    '[INFO] Demo environment loaded: Cyberverse Demo Lab',
+    '[SUCCESS] Authorization confirmed for all targets',
+    '[INFO] Digital twin generated from lab data',
+    '[INFO] Services normalized: '+state.services.length+' services discovered',
+    '[WARN] Critical finding: vsftpd 2.3.4 Backdoor on LAB-WEB',
+    '[WARN] Critical finding: Telnet enabled on LAB-WEB',
+    '[INFO] Risk engine calculation complete',
+    '[INFO] Historical snapshots loaded: '+state.snapshots.length+' scans',
+    '[INFO] Last synchronized: '+new Date().toLocaleString()
+  ];
+  log.innerHTML = entries.map((e,i) => {
+    const cls = e.includes('[WARN]')?'log-warn':e.includes('[SUCCESS]')?'log-success':e.includes('[ERROR]')?'log-error':'log-info';
+    return `<div class="${cls}"><span class="log-time">${String(i+1).padStart(2,'0')}:${String(Math.floor(Math.random()*60)).padStart(2,'0')}</span>${e}</div>`;
+  }).join('');
+}
+
+function renderTargets() {
+  document.getElementById('targets-table').innerHTML = state.targets.map(t=>`
+    <tr onclick="alert('Target: '+${JSON.stringify(t.name)}+' | IP: '+${JSON.stringify(t.ip)}+' | OS: '+${JSON.stringify(t.os)}+' | Risk: '+${JSON.stringify(t.risk)})">
+      <td><strong>${t.name}</strong>${state.isDemo?'&nbsp;<span class="badge badge-demo">DEMO</span>':''}</td>
+      <td><span class="tag">${t.ip}</span></td>
+      <td>${t.os}</td>
+      <td><span style="font-size:11px;color:var(--text3)">${t.type}</span></td>
+      <td><span style="color:var(--green2);font-size:11px">✓ Authorized</span></td>
+      <td><span class="badge badge-${t.risk.toLowerCase()}">${t.risk}</span></td>
+      <td><span class="badge badge-${t.status.toLowerCase()==='online'?'online':'info'}">${t.status}</span></td>
+    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text3)">No targets added. Click "+ Add Target" to begin.</td></tr>';
+}
+
+function renderNetwork() {
+  document.getElementById('network-table').innerHTML = state.targets.map(t=>{
+    const svc = state.services.filter(s=>s.target===t.name);
+    const ports = svc.map(s=>s.port).join(', ') || '—';
+    return `<tr>
+      <td>${t.os==='Windows'?'🪟':'🐧'} <strong>${t.name}</strong></td>
+      <td><span class="tag">${t.ip}</span></td>
+      <td style="color:var(--text3)"><em>${t.name.toLowerCase()}.lab</em></td>
+      <td>${t.os}</td>
+      <td style="color:var(--cyan);font-family:monospace;font-size:11px">${ports}</td>
+      <td><span class="badge badge-${t.status.toLowerCase()==='online'?'online':'info'}">${t.status}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderServices(filter) {
+  let svcs = state.services;
+  if (filter === 'open') svcs = svcs.filter(s=>s.state==='open');
+  else if (filter === 'web') svcs = svcs.filter(s=>s.cat==='web');
+  else if (filter === 'remote') svcs = svcs.filter(s=>s.cat==='remote');
+  else if (filter === 'file') svcs = svcs.filter(s=>s.cat==='file');
+  else if (filter === 'high') svcs = svcs.filter(s=>s.risk==='HIGH'||s.risk==='CRITICAL');
+
+  document.getElementById('services-table').innerHTML = svcs.map(s=>`
+    <tr>
+      <td><span class="port-num">${s.port}</span></td>
+      <td><span style="font-size:11px;color:var(--text3)">${s.proto}</span></td>
+      <td class="service-name">${s.service}</td>
+      <td style="font-size:11px;color:var(--text2)">${s.product} ${s.version!=='UNKNOWN'?s.version:''}</td>
+      <td><span style="font-size:11px">${s.target}</span></td>
+      <td><span class="state-${s.state}">${s.state.toUpperCase()}</span></td>
+      <td><span class="badge badge-${s.risk.toLowerCase()}">${s.risk}</span></td>
+    </tr>`).join('');
+}
+
+function filterServices(f) { renderServices(f); }
+
+function renderFindings(filter) {
+  let findings = state.findings;
+  if (filter !== 'all') findings = findings.filter(f=>f.severity===filter);
+  document.getElementById('findings-list').innerHTML = findings.map(f=>`
+    <div class="finding-item" onclick="showFinding(${f.id})">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span class="badge badge-${f.severity.toLowerCase()}">${f.severity}</span>
+        <div class="finding-title">${f.title}</div>
+      </div>
+      <div class="finding-meta">
+        <span>🖥 ${f.target}</span>
+        <span>🔌 ${f.service}</span>
+        <span>📅 ${f.lastSeen}</span>
+        <span style="color:var(--orange2)">${f.refs}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">${f.desc.substring(0,120)}...</div>
+    </div>`).join('') || '<div class="empty-state"><div class="empty-state-icon">✅</div><h3>No findings</h3><p>No security findings match this filter.</p></div>';
+}
+
+function filterFindings(f) { renderFindings(f); }
+
+function showFinding(id) {
+  const f = state.findings.find(x=>x.id===id);
+  if (!f) return;
+  document.getElementById('finding-detail-content').innerHTML = `
+    <div style="margin-bottom:16px">
+      <span class="badge badge-${f.severity.toLowerCase()}" style="margin-bottom:10px;display:inline-flex">${f.severity}</span>
+      <div class="modal-title" style="font-size:18px">${f.title}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:var(--bg3);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">TARGET</div><div style="font-size:13px;font-weight:600">${f.target}</div></div>
+      <div style="background:var(--bg3);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">SERVICE</div><div style="font-size:13px;font-weight:600">${f.service}</div></div>
+      <div style="background:var(--bg3);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">FIRST SEEN</div><div style="font-size:13px">${f.firstSeen}</div></div>
+      <div style="background:var(--bg3);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">REFERENCE</div><div style="font-size:12px;color:var(--accent2)">${f.refs}</div></div>
+    </div>
+    <div class="report-section">
+      <h3>Evidence</h3>
+      <div style="background:var(--bg3);border-radius:8px;padding:12px;font-family:monospace;font-size:12px;color:var(--green2)">${f.evidence}</div>
+    </div>
+    <div class="report-section">
+      <h3>Description</h3>
+      <p>${f.desc}</p>
+    </div>
+    <div class="report-section">
+      <h3>Impact</h3>
+      <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:12px">
+        <p style="color:var(--red2)">${f.impact}</p>
+      </div>
+    </div>
+    <div class="report-section">
+      <h3>Recommendation</h3>
+      <div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:12px">
+        <p style="color:var(--green2)">${f.recommendation}</p>
+      </div>
+    </div>
+    <div style="margin-top:16px;font-size:11px;color:var(--text3);font-style:italic">Note: This finding detail is for defensive assessment only. No exploit instructions are provided.</div>`;
+  openModal('finding-detail-modal');
+}
+
+function renderAttack() {
+  const services = [
+    {name:'HTTP', icon:'🌐', risk:'HIGH', count:4, detail:'4 web services exposed across 3 targets. Missing security headers, outdated versions detected.'},
+    {name:'SSH', icon:'🔐', risk:'MEDIUM', count:3, detail:'SSH accessible on 3 targets. Older OpenSSH version on LAB-WEB (4.7p1).'},
+    {name:'SMB', icon:'📂', risk:'CRITICAL', count:2, detail:'SMB exposed with vulnerable Samba 3.0.20. Remote code execution risk.'},
+    {name:'FTP', icon:'📁', risk:'HIGH', count:1, detail:'FTP with vsftpd 2.3.4 backdoor. Cleartext protocol.'},
+    {name:'Telnet', icon:'⚠', risk:'CRITICAL', count:1, detail:'Telnet cleartext protocol active. Full credential interception risk.'},
+    {name:'RDP', icon:'🖥', risk:'HIGH', count:1, detail:'RDP exposed without confirmed NLA. Brute-force risk.'},
+    {name:'Database', icon:'🗄', risk:'HIGH', count:3, detail:'3 database ports exposed: MySQL, PostgreSQL, MongoDB. MongoDB lacks authentication.'},
+    {name:'NetBIOS', icon:'🔗', risk:'MEDIUM', count:1, detail:'NetBIOS exposed — NTLM relay risk and network information disclosure.'},
+  ];
+  document.getElementById('attack-grid').innerHTML = services.map((s,i)=>`
+    <div class="attack-node" onclick="showAttackDetail(${i})">
+      <div class="attack-node-icon">${s.icon}</div>
+      <div class="attack-node-name">${s.name}</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px">${s.count} target${s.count>1?'s':''}</div>
+      <span class="badge badge-${s.risk.toLowerCase()}">${s.risk}</span>
+    </div>`).join('');
+  window._attackServices = services;
+}
+
+function showAttackDetail(i) {
+  const s = window._attackServices[i];
+  document.getElementById('attack-detail-card').style.display = 'block';
+  document.getElementById('attack-detail').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+      <span style="font-size:32px">${s.icon}</span>
+      <div>
+        <div style="font-size:16px;font-weight:700">${s.name}</div>
+        <span class="badge badge-${s.risk.toLowerCase()}">${s.risk}</span>
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--text2);line-height:1.7">${s.detail}</p>
+    <div style="margin-top:12px;padding:10px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:8px;font-size:12px;color:var(--green2)">
+      → Refer to Security Findings for detailed remediation guidance.
+    </div>`;
+}
+
+function renderRisk() {
+  const sorted = [...state.targets].sort((a,b)=>riskVal(b.risk)-riskVal(a.risk));
+  document.getElementById('risk-targets').innerHTML = sorted.map(t=>{
+    const rv = riskVal(t.risk);
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <span style="font-size:14px">${t.os==='Windows'?'🪟':'🐧'}</span>
+        <span style="font-size:13px;font-weight:600;flex:1">${t.name} <span style="color:var(--text3);font-size:11px;font-family:monospace">${t.ip}</span></span>
+        <span class="badge badge-${t.risk.toLowerCase()}">${t.risk}</span>
+        <span style="font-size:13px;font-weight:700;min-width:30px;text-align:right">${rv}</span>
+      </div>
+      <div class="risk-bar-wrap risk-${t.risk.toLowerCase()}"><div class="risk-bar-track"><div class="risk-bar-fill" style="width:${rv}%"></div></div></div>
+    </div>`;
+  }).join('');
+  drawRiskChart();
+}
+
+function riskVal(r) {
+  return {CRITICAL:85, HIGH:65, MEDIUM:45, LOW:20, UNKNOWN:30}[r] || 0;
+}
+
+function drawRiskChart() {
+  const canvas = document.getElementById('risk-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth || 500;
+  canvas.height = 140;
+  const counts = {CRITICAL:0,HIGH:0,MEDIUM:0,LOW:0,INFO:0};
+  state.findings.forEach(f=>counts[f.severity]=(counts[f.severity]||0)+1);
+  const data = [counts.CRITICAL, counts.HIGH, counts.MEDIUM, counts.LOW, counts.INFO];
+  const colors = ['#ef4444','#f59e0b','#fbbf24','#10b981','#3b82f6'];
+  const labels = ['Critical','High','Medium','Low','Info'];
+  const maxVal = Math.max(...data, 1);
+  const barW = (canvas.width - 60) / data.length;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  data.forEach((v, i) => {
+    const h = (v / maxVal) * 100;
+    const x = 30 + i * barW + barW * 0.2;
+    const w = barW * 0.6;
+    const y = 120 - h;
+    ctx.fillStyle = colors[i] + '33';
+    ctx.fillRect(x, 20, w, 100);
+    ctx.fillStyle = colors[i];
+    ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(labels[i], x + w/2, 135);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 12px Inter, sans-serif';
+    ctx.fillText(v, x + w/2, y - 4);
+  });
+}
+
+function renderTimeMachine() {
+  document.getElementById('timeline-wrap').innerHTML = state.snapshots.map((s,i)=>`
+    <div class="timeline-item" id="snap-${i}" onclick="showSnapshot(${i})">
+      <div class="timeline-scan-id">${s.id}</div>
+      <div class="timeline-dot"></div>
+      <div class="timeline-risk-val" style="color:${s.risk>70?'var(--red2)':s.risk>50?'var(--orange2)':'var(--green2)'}">${s.risk}</div>
+      <div class="timeline-risk-lbl">Risk Score</div>
+      <div style="font-size:9px;color:var(--text3);margin-top:4px">${s.date}</div>
+    </div>`).join('');
+  showSnapshot(state.snapshots.length - 1);
+}
+
+function showSnapshot(i) {
+  const s = state.snapshots[i];
+  const prev = i > 0 ? state.snapshots[i-1] : null;
+  document.getElementById('snapshot-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+      <div class="stat-card"><div class="stat-label">Scan ID</div><div style="font-size:14px;font-weight:700;color:var(--accent2)">${s.id}</div></div>
+      <div class="stat-card"><div class="stat-label">Risk Score</div><div class="stat-value" style="color:${s.risk>70?'var(--red2)':s.risk>50?'var(--orange2)':'var(--green2)'}">${s.risk}</div></div>
+      <div class="stat-card"><div class="stat-label">Targets</div><div class="stat-value stat-info">${s.targets}</div></div>
+      <div class="stat-card"><div class="stat-label">Findings</div><div class="stat-value stat-high">${s.findings}</div></div>
+    </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:8px">📝 ${s.label}</div>
+    ${prev ? `<div style="background:var(--bg3);border-radius:8px;padding:12px;font-size:12px">
+      <div style="font-weight:600;margin-bottom:8px;color:var(--text2)">Changes vs ${prev.id}:</div>
+      <div style="color:${s.risk>prev.risk?'var(--red2)':'var(--green2)'}">Risk: ${prev.risk} → ${s.risk} (${s.risk>prev.risk?'+':''}${s.risk-prev.risk})</div>
+      <div style="color:var(--text3)">Services: ${prev.services} → ${s.services} (${s.services>prev.services?'+':''}${s.services-prev.services})</div>
+      <div style="color:var(--text3)">Findings: ${prev.findings} → ${s.findings}</div>
+    </div>` : '<div style="font-size:12px;color:var(--text3)">First snapshot — no previous to compare.</div>'}`;
+}
+
+function renderSimulation() {
+  document.getElementById('sim-list').innerHTML = state.simulations.map(s=>`
+    <div class="sim-card" onclick="runSimulation(${s.id})">
+      <div class="sim-title">${s.title}</div>
+      <div class="sim-desc">${s.desc}</div>
+      <div style="margin-top:8px;font-size:11px;color:${s.color==='green'?'var(--green2)':'var(--red2)'}">${s.change > 0 ? '↑' : '↓'} Estimated risk change: ${s.change > 0 ? '+' : ''}${s.change} points</div>
+    </div>`).join('');
+}
+
+function runSimulation(id) {
+  const s = state.simulations.find(x=>x.id===id);
+  document.getElementById('sim-result-card').style.display = 'block';
+  document.getElementById('sim-result').innerHTML = `
+    <div style="background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:11.5px;color:#c4b5fd">
+      🧪 Simulation running on a copy of the current model. Real targets are NOT modified.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+      <div class="stat-card"><div class="stat-label">Current Risk</div><div class="stat-value stat-high">${s.riskBefore}</div></div>
+      <div class="stat-card"><div class="stat-label">Simulated Risk</div><div class="stat-value" style="color:${s.color==='green'?'var(--green2)':'var(--red2)'}">${s.riskAfter}</div></div>
+      <div class="stat-card"><div class="stat-label">Change</div><div class="stat-value" style="color:${s.color==='green'?'var(--green2)':'var(--red2)'}">${s.change>0?'+':''}${s.change}</div></div>
+    </div>
+    <div style="font-size:13px;font-weight:600;margin-bottom:6px">${s.title}</div>
+    <p style="font-size:12.5px;color:var(--text2)">${s.desc}</p>
+    <div style="margin-top:12px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.15);border-radius:8px;padding:12px;font-size:12px;color:var(--text2)">
+      ${s.color==='green'?'✅ This change would reduce risk. Recommended action for your lab environment.':'⚠ This change would increase risk. Avoid this configuration.'}
+    </div>`;
+  document.getElementById('sim-result-card').scrollIntoView({behavior:'smooth'});
+}
+
+function renderEnvironments() {
+  document.getElementById('env-list').innerHTML = state.environments.map(e=>`
+    <div class="card" style="background:var(--bg3)">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <span style="font-size:24px">🏗</span>
+        <div>
+          <div style="font-size:15px;font-weight:700">${e.name}</div>
+          <div style="font-size:11px;color:var(--text3)">${e.type}</div>
+        </div>
+        <span class="badge badge-online" style="margin-left:auto">ONLINE</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
+        <div class="stat-card" style="padding:10px"><div class="stat-label">Targets</div><div style="font-size:20px;font-weight:700;color:var(--accent2)">${state.targets.filter(t=>true).length}</div></div>
+        <div class="stat-card" style="padding:10px"><div class="stat-label">Services</div><div style="font-size:20px;font-weight:700;color:var(--accent2)">${state.services.length}</div></div>
+        <div class="stat-card" style="padding:10px"><div class="stat-label">Findings</div><div style="font-size:20px;font-weight:700;color:var(--orange2)">${state.findings.length}</div></div>
+      </div>
+      <div style="font-size:12px;color:var(--text3)">${e.desc || 'No description.'}</div>
+    </div>`).join('') || '<div class="empty-state"><div class="empty-state-icon">🏗</div><h3>No environments</h3><p>Create an environment to group your authorized targets.</p></div>';
+}
+
+function renderScanJobs() {
+  document.getElementById('scanjobs-table').innerHTML = state.scanJobs.map(j=>`
+    <tr>
+      <td><span class="tag">${j.id}</span></td>
+      <td>${j.target}</td>
+      <td><span style="font-size:11px;color:var(--text3)">${j.scanner}</span></td>
+      <td><span class="badge badge-${j.status==='COMPLETED'?'online':j.status==='FAILED'?'critical':'info'}">${j.status}</span></td>
+      <td style="font-size:11px;color:var(--text3)">${j.started}</td>
+      <td><span class="card-action" style="font-size:11px">View</span></td>
+    </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3)">No scan jobs. Import scan results to begin.</td></tr>';
+}
+
+function renderAudit() {
+  document.getElementById('audit-table').innerHTML = state.auditLog.map(l=>`
+    <tr>
+      <td style="font-size:11px;font-family:monospace;color:var(--text3)">${l.ts}</td>
+      <td><span class="tag">${l.event}</span></td>
+      <td style="font-size:12px">${l.user}</td>
+      <td style="font-size:12px;color:var(--text2)">${l.target}</td>
+      <td style="font-size:12px;color:var(--text3)">${l.detail}</td>
+    </tr>`).join('');
+}
+
+function generateReport() {
+  const crit = state.findings.filter(f=>f.severity==='CRITICAL').length;
+  const high = state.findings.filter(f=>f.severity==='HIGH').length;
+  const ts = new Date().toISOString().split('T')[0];
+  document.getElementById('report-content').innerHTML = `
+    <div class="report-disclaimer">⚠ Assessment data represents authorized laboratory/testing activity. This report is for defensive security assessment purposes only.</div>
+    <div style="background:var(--bg3);border-radius:10px;padding:16px;margin-bottom:16px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">CYBERVERSE AUTHORIZED SECURITY ASSESSMENT</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <div><div style="font-size:10px;color:var(--text3)">ASSESSMENT ID</div><div style="font-size:13px;font-weight:600;color:var(--accent2)">CVA-${Date.now().toString(36).toUpperCase()}</div></div>
+        <div><div style="font-size:10px;color:var(--text3)">DATE</div><div style="font-size:13px;font-weight:600">${ts}</div></div>
+        <div><div style="font-size:10px;color:var(--text3)">ENVIRONMENT</div><div style="font-size:13px;font-weight:600">${state.currentEnv}</div></div>
+      </div>
+    </div>
+    <div class="report-section">
+      <h3>Executive Summary</h3>
+      <p>This authorized security assessment of the <strong>${state.currentEnv}</strong> environment identified <strong>${state.findings.length} security findings</strong>, including ${crit} critical and ${high} high severity issues. The overall risk posture is rated HIGH. Immediate remediation of critical findings is strongly recommended.</p>
+    </div>
+    <div class="report-section">
+      <h3>Scope & Authorization</h3>
+      <p>${state.targets.length} targets were assessed. All targets have confirmed authorization. Assessment was conducted within an authorized laboratory environment. No production systems were tested.</p>
+    </div>
+    <div class="report-section">
+      <h3>Target Inventory</h3>
+      <ul>
+        ${state.targets.map(t=>`<li>${t.name} (${t.ip}) — ${t.os} — Risk: ${t.risk}</li>`).join('')}
+      </ul>
+    </div>
+    <div class="report-section">
+      <h3>Key Findings</h3>
+      <ul>
+        ${state.findings.filter(f=>f.severity==='CRITICAL'||f.severity==='HIGH').map(f=>`<li>[${f.severity}] ${f.title} — ${f.target} (${f.service})</li>`).join('')}
+      </ul>
+    </div>
+    <div class="report-section">
+      <h3>Top Recommendations</h3>
+      <ul>
+        <li>Immediately disable Telnet and replace with SSH on all targets</li>
+        <li>Upgrade vsftpd from 2.3.4 to a non-backdoored version or disable FTP</li>
+        <li>Upgrade Samba to a patched version (3.0.20 is critically vulnerable)</li>
+        <li>Enable authentication on MongoDB and restrict to localhost</li>
+        <li>Enable Network Level Authentication (NLA) on RDP</li>
+        <li>Bind database services to localhost or private management network</li>
+        <li>Upgrade all EOL software components (Apache 2.2.x, OpenSSH 4.7)</li>
+      </ul>
+    </div>
+    <div class="report-section">
+      <h3>Limitations</h3>
+      <p>This assessment used imported scan data and authorized tool output. Risk scores are model-generated estimates and may not reflect all attack vectors. Manual penetration testing and code review are recommended for comprehensive coverage.</p>
+    </div>
+    <div style="margin-top:16px;font-size:11px;color:var(--text3);border-top:1px solid var(--border);padding-top:12px">Generated by Cyberverse v1.0 — ${new Date().toLocaleString()}</div>`;
+}
+
+// =====================
+// DIGITAL TWIN
+// =====================
+function renderTwin() {
+  const canvas = document.getElementById('twin-canvas');
+  if (!canvas) return;
+  canvas.width = canvas.offsetWidth || 600;
+  canvas.height = 340;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const nodes = [
+    {id:'gateway', label:'Gateway', x:canvas.width/2, y:40, icon:'🌐', color:'#3b82f6', targets:[]},
+    ...state.targets.map((t,i)=>{
+      const angle = (i / state.targets.length) * Math.PI * 1.2 - 0.3;
+      const r = 160;
+      return {
+        id:t.id, label:t.name, ip:t.ip, x:canvas.width/2 + r*Math.cos(angle), y:200 + r*0.7*Math.sin(angle),
+        icon:t.os==='Windows'?'🪟':'🐧',
+        color:{CRITICAL:'#ef4444',HIGH:'#f59e0b',MEDIUM:'#fbbf24',LOW:'#10b981',UNKNOWN:'#64748b'}[t.risk],
+        target:t
+      };
+    })
+  ];
+
+  // Draw connections
+  nodes.slice(1).forEach(n=>{
+    ctx.beginPath();
+    ctx.moveTo(nodes[0].x, nodes[0].y + 20);
+    ctx.lineTo(n.x, n.y - 20);
+    ctx.strokeStyle = 'rgba(99,179,237,0.2)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4,4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  // Draw nodes
+  nodes.forEach(n=>{
+    // Glow
+    const grd = ctx.createRadialGradient(n.x, n.y, 5, n.x, n.y, 35);
+    grd.addColorStop(0, (n.color||'#3b82f6')+'44');
+    grd.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, 35, 0, Math.PI*2);
+    ctx.fill();
+
+    // Circle
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, 22, 0, Math.PI*2);
+    ctx.fillStyle = '#141928';
+    ctx.fill();
+    ctx.strokeStyle = n.color || '#3b82f6';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Icon
+    ctx.font = '18px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.icon, n.x, n.y);
+
+    // Label
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 11px Inter, sans-serif';
+    ctx.textBaseline = 'top';
+    ctx.fillText(n.label, n.x, n.y + 28);
+
+    if (n.ip) {
+      ctx.fillStyle = '#64748b';
+      ctx.font = '9px monospace';
+      ctx.fillText(n.ip, n.x, n.y + 42);
+    }
+  });
+
+  canvas.onclick = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    nodes.forEach(n=>{
+      const dx = mx - n.x, dy = my - n.y;
+      if (Math.sqrt(dx*dx+dy*dy) < 28) {
+        showTwinDetail(n);
+      }
+    });
+  };
+}
+
+function showTwinDetail(n) {
+  if (!n.target) {
+    document.getElementById('twin-detail').innerHTML = `<div style="padding:14px"><div style="font-size:15px;font-weight:700;margin-bottom:8px">🌐 Network Gateway</div><div style="font-size:12px;color:var(--text2)">Central network gateway — routes traffic to all lab targets.</div></div>`;
+    return;
+  }
+  const t = n.target;
+  const svc = state.services.filter(s=>s.target===t.name);
+  document.getElementById('twin-detail').innerHTML = `
+    <div style="padding:8px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-size:28px">${t.os==='Windows'?'🪟':'🐧'}</span>
+        <div>
+          <div style="font-size:16px;font-weight:700">${t.name}</div>
+          <span class="badge badge-${t.risk.toLowerCase()}">${t.risk}</span>
+        </div>
+        <span class="badge badge-${t.status.toLowerCase()==='online'?'online':'info'}" style="margin-left:auto">${t.status}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:var(--bg3);border-radius:6px;padding:8px"><div style="font-size:10px;color:var(--text3)">IP</div><div style="font-size:12px;font-family:monospace">${t.ip}</div></div>
+        <div style="background:var(--bg3);border-radius:6px;padding:8px"><div style="font-size:10px;color:var(--text3)">OS</div><div style="font-size:12px">${t.os}</div></div>
+        <div style="background:var(--bg3);border-radius:6px;padding:8px"><div style="font-size:10px;color:var(--text3)">Type</div><div style="font-size:12px">${t.type}</div></div>
+        <div style="background:var(--bg3);border-radius:6px;padding:8px"><div style="font-size:10px;color:var(--text3)">Services</div><div style="font-size:12px">${svc.length} open</div></div>
+      </div>
+      <div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px">OPEN SERVICES</div>
+      ${svc.map(s=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)"><span class="port-num">${s.port}</span><span style="font-size:12px">${s.service}</span><span style="font-size:11px;color:var(--text3)">${s.product}</span><span class="badge badge-${s.risk.toLowerCase()}" style="margin-left:auto">${s.risk}</span></div>`).join('')}
+    </div>`;
+}
+
+// =====================
+// TARGET MANAGEMENT
+// =====================
+document.getElementById('t-auth').addEventListener('change', function() {
+  document.getElementById('add-target-btn').disabled = !this.checked;
+});
+
+function addTarget() {
+  const name = document.getElementById('t-name').value.trim();
+  const ip = document.getElementById('t-ip').value.trim();
+  const auth = document.getElementById('t-auth').checked;
+  if (!name || !ip) { alert('Target name and IP/hostname are required.'); return; }
+  if (!auth) { alert('Assessment cannot start until authorization is confirmed.'); return; }
+
+  const target = {
+    id: Date.now(), name, ip,
+    port: document.getElementById('t-port').value,
+    type: document.getElementById('t-type').value,
+    os: document.getElementById('t-os').value,
+    env: document.getElementById('t-env').value,
+    risk: document.getElementById('t-risk').value,
+    desc: document.getElementById('t-desc').value,
+    auth: true, status: 'ONLINE'
+  };
+  state.targets.push(target);
+  state.isDemo = false;
+  addAuditEntry('TARGET_ADDED', name, 'Authorization confirmed');
+  addConsoleLog(`[SUCCESS] Target registered: ${name} (${ip}) — Authorization confirmed`);
+  updateEnvDisplay();
+  closeModal('add-target-modal');
+  document.getElementById('t-name').value='';
+  document.getElementById('t-ip').value='';
+  document.getElementById('t-auth').checked=false;
+  document.getElementById('add-target-btn').disabled=true;
+  navigate('targets', null);
+}
+
+function addEnvironment() {
+  const name = document.getElementById('env-n').value.trim();
+  if (!name) { alert('Environment name is required.'); return; }
+  state.environments.push({id:Date.now(), name, type:document.getElementById('env-t').value, desc:document.getElementById('env-d').value, status:'ONLINE'});
+  state.currentEnv = name;
+  updateEnvDisplay();
+  closeModal('add-env-modal');
+  renderEnvironments();
+}
+
+function updateEnvDisplay() {
+  document.getElementById('env-name-display').textContent = state.currentEnv;
+  document.getElementById('env-meta-display').textContent = state.targets.length + ' targets · ' + state.findings.length + ' findings';
+  document.getElementById('topbar-env-badge').textContent = state.isDemo ? 'DEMO ENV' : 'LAB ENV';
+  document.getElementById('findings-badge').textContent = state.findings.length;
+}
+
+// =====================
+// FILE IMPORT
+// =====================
+function handleFileImport(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const content = e.target.result;
+    document.getElementById('import-text') && (document.getElementById('import-text').value = content);
+    parseImportContent(content, file.name);
+  };
+  reader.readAsText(file);
+}
+
+function parseImport() {
+  const text = document.getElementById('import-text').value.trim();
+  if (!text) { alert('Please paste scan output or upload a file.'); return; }
+  parseImportContent(text, 'paste');
+}
+
+function parseImportContent(content, source) {
+  let result = '<div class="sim-result"><strong>✅ Import Processed</strong><br><br>';
+  try {
+    if (content.includes('<?xml') || content.includes('<nmaprun')) {
+      result += parseNmapXML(content);
+    } else if (content.trim().startsWith('{') || content.trim().startsWith('[')) {
+      result += parseJSONScan(content);
+    } else {
+      result += '<span style="color:var(--text2)">Format detected: Plain text<br>Manual review required. No structured data could be extracted automatically.</span>';
+    }
+  } catch(e) {
+    result += '<span style="color:var(--red2)">Parse error: ' + e.message + '</span>';
+  }
+  result += `<div style="margin-top:10px;font-size:11px;color:var(--text3)">Source: ${source} — Imported: ${new Date().toLocaleString()}</div></div>`;
+  if (document.getElementById('import-result')) document.getElementById('import-result').innerHTML = result;
+  addAuditEntry('SCAN_IMPORTED', source, 'Scan result parsed and normalized');
+  addConsoleLog('[INFO] Scan result imported from: ' + source);
+}
+
+function parseNmapXML(xml) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xml, 'text/xml');
+  const hosts = doc.querySelectorAll('host');
+  let out = `<strong>Nmap XML detected — ${hosts.length} host(s)</strong><br><br>`;
+  hosts.forEach(host => {
+    const addr = host.querySelector('address[addrtype="ipv4"]');
+    const ip = addr ? addr.getAttribute('addr') : 'UNKNOWN';
+    const ports = host.querySelectorAll('port[portid]');
+    out += `<div style="margin-bottom:8px"><strong>${ip}</strong> — ${ports.length} port(s)</div>`;
+    ports.forEach(p => {
+      const state = p.querySelector('state');
+      const service = p.querySelector('service');
+      out += `<div style="font-size:11px;color:var(--text2);padding-left:12px">${p.getAttribute('portid')}/${p.getAttribute('protocol')} — ${state?state.getAttribute('state'):'?'} — ${service?service.getAttribute('name'):'UNKNOWN'}</div>`;
+    });
+  });
+  return out || 'No hosts found in Nmap XML.';
+}
+
+function parseJSONScan(json) {
+  const data = JSON.parse(json);
+  return `<strong>JSON scan data detected</strong><br><pre style="font-size:10px;color:var(--text2);overflow:auto;max-height:200px">${JSON.stringify(data, null, 2).substring(0,800)}</pre>`;
+}
+
+// =====================
+// MODAL HELPERS
+// =====================
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); });
+});
+
+// =====================
+// AUDIT / CONSOLE
+// =====================
+function addAuditEntry(event, target, detail) {
+  state.auditLog.unshift({ts:new Date().toISOString().replace('T',' ').split('.')[0], event, user:'analyst', target, detail});
+}
+
+function addConsoleLog(msg) {
+  const log = document.getElementById('console-log');
+  if (log) {
+    const div = document.createElement('div');
+    div.className = msg.includes('[SUCCESS]')?'log-success':msg.includes('[WARN]')?'log-warn':msg.includes('[ERROR]')?'log-error':'log-info';
+    div.innerHTML = `<span class="log-time">${new Date().toLocaleTimeString()}</span>${msg}`;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+  }
+}
+
+function saveSettings() {
+  state.currentEnv = document.getElementById('setting-env').value || state.currentEnv;
+  updateEnvDisplay();
+  addConsoleLog('[SUCCESS] Settings saved');
+  alert('Settings saved.');
+}
+
+// =====================
+// LANDING CANVAS ANIMATION
+// =====================
+function initLandingCanvas() {
+  const canvas = document.getElementById('network-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const nodes = Array.from({length:30}, ()=>({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    vx: (Math.random()-0.5)*0.4,
+    vy: (Math.random()-0.5)*0.4,
+    r: Math.random()*3+2,
+    pulse: Math.random()*Math.PI*2
+  }));
+
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    nodes.forEach(n=>{
+      n.x += n.vx; n.y += n.vy; n.pulse += 0.02;
+      if(n.x<0||n.x>canvas.width) n.vx*=-1;
+      if(n.y<0||n.y>canvas.height) n.vy*=-1;
+    });
+    for(let i=0;i<nodes.length;i++) {
+      for(let j=i+1;j<nodes.length;j++) {
+        const dx=nodes[i].x-nodes[j].x, dy=nodes[i].y-nodes[j].y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<180) {
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x,nodes[i].y);
+          ctx.lineTo(nodes[j].x,nodes[j].y);
+          ctx.strokeStyle=`rgba(59,130,246,${0.15*(1-d/180)})`;
+          ctx.lineWidth=0.5;
+          ctx.stroke();
+        }
+      }
+    }
+    nodes.forEach(n=>{
+      const pulse = Math.sin(n.pulse)*0.5+0.5;
+      ctx.beginPath();
+      ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(99,179,237,${0.4+pulse*0.4})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+  window.addEventListener('resize',()=>{ canvas.width=window.innerWidth; canvas.height=window.innerHeight; });
+}
+
+// =====================
+// ENTRY POINTS
+// =====================
+function enterApp() {
+  document.getElementById('landing').style.display='none';
+  document.getElementById('app').classList.add('visible');
+  if (!state.targets.length) loadDemoData();
+  updateEnvDisplay();
+  renderDashboard();
+}
+
+function loadDemo() {
+  loadDemoData();
+  enterApp();
+}
+
+// =====================
+// INIT
+// =====================
+initLandingCanvas();
+</script>
+</body>
+</html>
